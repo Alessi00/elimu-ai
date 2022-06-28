@@ -2,7 +2,7 @@ package ai.elimu.rest.v2;
 
 import ai.elimu.model.admin.Application;
 import ai.elimu.model.admin.ApplicationVersion;
-import ai.elimu.model.content.Allophone;
+import ai.elimu.model.content.Sound;
 import ai.elimu.model.content.Emoji;
 import ai.elimu.model.content.Letter;
 import ai.elimu.model.content.LetterSoundCorrespondence;
@@ -15,10 +15,11 @@ import ai.elimu.model.content.multimedia.Audio;
 import ai.elimu.model.content.multimedia.Image;
 import ai.elimu.model.content.multimedia.Video;
 import ai.elimu.model.contributor.AudioContributionEvent;
+import ai.elimu.model.contributor.NumberContributionEvent;
 import ai.elimu.model.contributor.WordContributionEvent;
 import ai.elimu.model.v2.gson.application.ApplicationGson;
 import ai.elimu.model.v2.gson.application.ApplicationVersionGson;
-import ai.elimu.model.v2.gson.content.AllophoneGson;
+import ai.elimu.model.v2.gson.content.SoundGson;
 import ai.elimu.model.v2.gson.content.AudioGson;
 import ai.elimu.model.v2.gson.content.EmojiGson;
 import ai.elimu.model.v2.gson.content.ImageGson;
@@ -31,6 +32,7 @@ import ai.elimu.model.v2.gson.content.StoryBookParagraphGson;
 import ai.elimu.model.v2.gson.content.VideoGson;
 import ai.elimu.model.v2.gson.content.WordGson;
 import ai.elimu.model.v2.gson.crowdsource.AudioContributionEventGson;
+import ai.elimu.model.v2.gson.crowdsource.NumberContributionEventGson;
 import ai.elimu.model.v2.gson.crowdsource.WordContributionEventGson;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,25 +66,25 @@ public class JpaToGsonConverter {
         }
     }
     
-    public static AllophoneGson getAllophoneGson(Allophone allophone) {
-        if (allophone == null) {
+    public static SoundGson getSoundGson(Sound sound) {
+        if (sound == null) {
             return null;
         } else {
-            AllophoneGson allophoneGson = new AllophoneGson();
+            SoundGson soundGson = new SoundGson();
             
             // BaseEntity
-            allophoneGson.setId(allophone.getId());
+            soundGson.setId(sound.getId());
             
             // Content
-            allophoneGson.setRevisionNumber(allophone.getRevisionNumber());
-            allophoneGson.setUsageCount(allophone.getUsageCount());
+            soundGson.setRevisionNumber(sound.getRevisionNumber());
+            soundGson.setUsageCount(sound.getUsageCount());
             
-            // Allophone
-            allophoneGson.setValueIpa(allophone.getValueIpa());
-            allophoneGson.setDiacritic(allophone.isDiacritic());
-            allophoneGson.setSoundType(allophone.getSoundType());
+            // Sound
+            soundGson.setValueIpa(sound.getValueIpa());
+            soundGson.setDiacritic(sound.isDiacritic());
+            soundGson.setSoundType(sound.getSoundType());
             
-            return allophoneGson;
+            return soundGson;
         }
     }
     
@@ -102,12 +104,12 @@ public class JpaToGsonConverter {
                 letters.add(letterGson);
             }
             letterSoundCorrespondenceGson.setLetters(letters);
-            List<AllophoneGson> allophones = new ArrayList<>();
-            for (Allophone allophone : letterSoundCorrespondence.getAllophones()) {
-                AllophoneGson allophoneGson = getAllophoneGson(allophone);
-                allophones.add(allophoneGson);
+            List<SoundGson> sounds = new ArrayList<>();
+            for (Sound sound : letterSoundCorrespondence.getSounds()) {
+                SoundGson soundGson = getSoundGson(sound);
+                sounds.add(soundGson);
             }
-            letterSoundCorrespondenceGson.setAllophones(allophones);
+            letterSoundCorrespondenceGson.setSounds(sounds);
             letterSoundCorrespondenceGson.setUsageCount(letterSoundCorrespondence.getUsageCount());
             
             return letterSoundCorrespondenceGson;
@@ -406,6 +408,24 @@ public class JpaToGsonConverter {
             wordContributionEventGson.setTime(wordContributionEvent.getTime());
             
             return wordContributionEventGson;
+        }
+    }
+    
+    public static NumberContributionEventGson getNumberContributionEventGson(NumberContributionEvent numberContributionEvent) {
+        if (numberContributionEvent == null) {
+            return null;
+        } else {
+            NumberContributionEventGson numberContributionEventGson = new NumberContributionEventGson();
+            
+            // BaseEntity
+            numberContributionEventGson.setId(numberContributionEvent.getId());
+            
+            // NumberContributionEvent
+            numberContributionEventGson.setNumber(getNumberGson(numberContributionEvent.getNumber()));
+            numberContributionEventGson.setComment(numberContributionEvent.getComment());
+            numberContributionEventGson.setTime(numberContributionEvent.getTime());
+            
+            return numberContributionEventGson;
         }
     }
     

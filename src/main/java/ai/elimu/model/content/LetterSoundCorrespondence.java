@@ -1,6 +1,5 @@
 package ai.elimu.model.content;
 
-import ai.elimu.model.BaseEntity;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,10 +8,10 @@ import javax.persistence.OrderColumn;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
- * Contains information about the various sounds a letter can represent.
+ * Contains information about the various sounds a letter (or letter combination) can represent.
  */
 @Entity
-public class LetterSoundCorrespondence extends BaseEntity {
+public class LetterSoundCorrespondence extends Content {
     
 //    @NotEmpty
     @OrderColumn
@@ -22,9 +21,7 @@ public class LetterSoundCorrespondence extends BaseEntity {
 //    @NotEmpty
     @OrderColumn
     @ManyToMany(fetch = FetchType.EAGER)
-    private List<Allophone> allophones;
-    
-    private int usageCount;
+    private List<Sound> sounds;
     
     public List<Letter> getLetters() {
         return letters;
@@ -34,19 +31,11 @@ public class LetterSoundCorrespondence extends BaseEntity {
         this.letters = letters;
     }
 
-    public List<Allophone> getAllophones() {
-        return allophones;
+    public List<Sound> getSounds() {
+        return sounds;
     }
 
-    public void setAllophones(List<Allophone> allophones) {
-        this.allophones = allophones;
-    }
-
-    public int getUsageCount() {
-        return usageCount;
-    }
-
-    public void setUsageCount(int usageCount) {
-        this.usageCount = usageCount;
+    public void setSounds(List<Sound> sounds) {
+        this.sounds = sounds;
     }
 }

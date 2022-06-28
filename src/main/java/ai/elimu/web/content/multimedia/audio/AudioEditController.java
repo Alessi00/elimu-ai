@@ -26,10 +26,12 @@ import ai.elimu.model.contributor.AudioContributionEvent;
 import ai.elimu.model.contributor.Contributor;
 import ai.elimu.model.enums.ContentLicense;
 import ai.elimu.model.enums.Platform;
-import ai.elimu.model.enums.content.AudioFormat;
-import ai.elimu.model.enums.content.LiteracySkill;
-import ai.elimu.model.enums.content.NumeracySkill;
+import ai.elimu.model.v2.enums.content.AudioFormat;
+import ai.elimu.model.v2.enums.content.LiteracySkill;
+import ai.elimu.model.v2.enums.content.NumeracySkill;
+import ai.elimu.util.DiscordHelper;
 import ai.elimu.util.audio.AudioMetadataExtractionHelper;
+import ai.elimu.web.context.EnvironmentContextLoaderListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -187,10 +189,19 @@ public class AudioEditController {
             audioContributionEvent.setTime(Calendar.getInstance());
             audioContributionEvent.setAudio(audio);
             audioContributionEvent.setRevisionNumber(audio.getRevisionNumber());
-            audioContributionEvent.setComment(request.getParameter("contributionComment"));
+            audioContributionEvent.setComment(StringUtils.abbreviate(request.getParameter("contributionComment"), 1000));
             audioContributionEvent.setTimeSpentMs(System.currentTimeMillis() - Long.valueOf(request.getParameter("timeStart")));
             audioContributionEvent.setPlatform(Platform.WEBAPP);
             audioContributionEventDao.create(audioContributionEvent);
+            
+            String contentUrl = "https://" + EnvironmentContextLoaderListener.PROPERTIES.getProperty("content.language").toLowerCase() + ".elimu.ai/content/multimedia/audio/edit/" + audio.getId();
+            DiscordHelper.sendChannelMessage(
+                    "Audio edited: " + contentUrl, 
+                    "\"" + audio.getTranscription() + "\"",
+                    "Comment: \"" + audioContributionEvent.getComment() + "\"",
+                    null,
+                    null
+            );
             
             return "redirect:/content/multimedia/audio/list#" + audio.getId();
         }

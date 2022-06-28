@@ -108,7 +108,7 @@
             <div class="col s12 offset-m2 m4">
                 <h5 class="header">Learning Platform 🧩</h5>
                 <p>
-                    The elimu.ai software is a <i>platform</i> of educational content and Android apps.
+                    The elimu.ai software is a <i>platform</i> of educational content and Android apps/games.
                 </p>
                 <p>
                     Each child is provided with a clear instructional path for learning literacy and numeracy as efficiently as possible.
@@ -132,7 +132,7 @@
                     The <a href="https://github.com/elimu-ai/appstore" target="_blank">elimu.ai Appstore</a> makes it easy to download and use the software.
                 </p>
                 <p>
-                    Anyone is welcome to take the existing code and <a href="https://github.com/elimu-ai/wiki/blob/master/LOCALIZATION.md" target="_blank">adapt</a> it to their local needs.
+                    Also, anyone is welcome to take the existing code and <a href="https://github.com/elimu-ai/wiki/blob/master/LOCALIZATION.md" target="_blank">adapt</a> it to their local needs.
                 </p>
             </div>
             <div class="col s12 m4">

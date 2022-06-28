@@ -147,7 +147,7 @@
         <p>To get started, we recommend these Web3 providers:</p>
         <ul>
             <li>Laptop: <a href="https://metamask.io/download.html" target="_blank">MetaMask</a></li>
-            <li>Smartphone: <a href="https://status.im/get" target="_blank">Status</a>/<a href="https://www.myetherwallet.com/" target="_blank">MyEtherWallet</a></li>
+            <li>Smartphone: <a href="https://www.myetherwallet.com/" target="_blank">MyEtherWallet</a></li>
         </ul>
     </div>
     
@@ -159,10 +159,10 @@
             Active contributors get rewarded with 
             <c:choose>
                 <c:when test="${applicationScope.configProperties['env'] != 'PROD'}">
-                    <a href="https://rinkeby.etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>ELIMU</code></a>
+                    <a href="https://rinkeby.etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>$ELIMU</code></a>
                 </c:when>
                 <c:otherwise>
-                    <a href="https://etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>ELIMU</code></a>
+                    <a href="https://etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>$ELIMU</code></a>
                 </c:otherwise>
             </c:choose> 
             tokens.

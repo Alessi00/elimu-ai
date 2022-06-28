@@ -16,6 +16,8 @@ To be able to compile and execute the web application locally, you will first ne
 
   * macOS: `brew install maven`
 
+Get Covalent API KEY from https://www.covalenthq.com/platform/#/auth/register/ and update it in src/main/resources/config.properties file
+
 Go to the project's folder:
 
     cd webapp
@@ -33,12 +35,12 @@ To run the application in debug mode, replace `mvn` with `mvnDebug` in the comma
 
 ## Test server
 
-    http://<language>.test.elimu.ai
+    https://<language>.test.elimu.ai
 
 
 ## Prod server
 
-    http://<language>.elimu.ai
+    https://<language>.elimu.ai
 
 
 ## Supported languages 🇺🇸🇵🇭🇮🇳🇹🇿

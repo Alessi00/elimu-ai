@@ -4,10 +4,13 @@ import ai.elimu.model.content.LetterSoundCorrespondence;
 import ai.elimu.model.content.Word;
 import ai.elimu.model.contributor.Contributor;
 import ai.elimu.model.contributor.WordContributionEvent;
+import ai.elimu.model.enums.Platform;
 import ai.elimu.model.v2.gson.content.LetterSoundCorrespondenceGson;
 import ai.elimu.model.v2.gson.content.WordGson;
 import ai.elimu.model.v2.gson.crowdsource.WordContributionEventGson;
 import ai.elimu.rest.v2.JpaToGsonConverter;
+import ai.elimu.util.DiscordHelper;
+import ai.elimu.web.context.EnvironmentContextLoaderListener;
 import com.google.gson.Gson;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -156,17 +159,22 @@ public class WordContributionRestController {
             wordContributionEvent.setTime(wordContributionEventGson.getTime());
             wordContributionEvent.setWord(word);
             wordContributionEvent.setRevisionNumber(word.getRevisionNumber());
-            wordContributionEvent.setComment(wordContributionEventGson.getComment());
+            wordContributionEvent.setComment(StringUtils.abbreviate(wordContributionEventGson.getComment(), 1000));
             wordContributionEvent.setTimeSpentMs(System.currentTimeMillis() -
                     wordContributionEvent.getTime().getTimeInMillis());
-
             // TODO: wordContributionEvent.setTimeSpentMs(wordContributionEventGson.getTimeSpentMs());
             //  refer to: https://github.com/elimu-ai/webapp/pull/1289#discussion_r642024541
-
-            // TODO: wordContributionEvent.setPlatform(Platform.CROWDSOURCE_APP);
-            //  refer to : https://github.com/elimu-ai/webapp/pull/1289#discussion_r638936145
-
+            wordContributionEvent.setPlatform(Platform.CROWDSOURCE_APP);
             wordContributionEventDao.create(wordContributionEvent);
+            
+            String contentUrl = "https://" + EnvironmentContextLoaderListener.PROPERTIES.getProperty("content.language").toLowerCase() + ".elimu.ai/content/word/edit/" + word.getId();
+            DiscordHelper.sendChannelMessage(
+                    "Word created: " + contentUrl,
+                    "\"" + wordContributionEvent.getWord().getText() + "\"",
+                    "Comment: \"" + wordContributionEvent.getComment() + "\"",
+                    null,
+                    null
+            );
 
             response.setStatus(HttpStatus.CREATED.value());
         } catch (Exception ex) {

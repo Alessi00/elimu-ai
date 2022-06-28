@@ -1,9 +1,11 @@
 package ai.elimu.util.db;
 
-import ai.elimu.dao.AllophoneDao;
+import ai.elimu.dao.ApplicationDao;
 import ai.elimu.dao.ContributorDao;
 import ai.elimu.dao.EmojiDao;
+import ai.elimu.dao.LetterContributionEventDao;
 import ai.elimu.dao.LetterDao;
+import ai.elimu.dao.LetterSoundCorrespondenceContributionEventDao;
 import ai.elimu.dao.NumberDao;
 import ai.elimu.dao.StoryBookChapterDao;
 import ai.elimu.dao.StoryBookContributionEventDao;
@@ -11,7 +13,7 @@ import ai.elimu.dao.StoryBookDao;
 import ai.elimu.dao.StoryBookParagraphDao;
 import ai.elimu.dao.WordContributionEventDao;
 import ai.elimu.dao.WordDao;
-import ai.elimu.model.content.Allophone;
+import ai.elimu.model.content.Sound;
 import ai.elimu.model.content.Emoji;
 import ai.elimu.model.content.Letter;
 import ai.elimu.model.content.LetterSoundCorrespondence;
@@ -23,8 +25,8 @@ import ai.elimu.model.content.Word;
 import ai.elimu.model.contributor.Contributor;
 import ai.elimu.model.contributor.StoryBookContributionEvent;
 import ai.elimu.model.contributor.WordContributionEvent;
-import ai.elimu.model.enums.Environment;
-import ai.elimu.model.enums.Language;
+import ai.elimu.model.v2.enums.Environment;
+import ai.elimu.model.v2.enums.Language;
 import ai.elimu.model.enums.Role;
 import ai.elimu.model.v2.gson.content.StoryBookChapterGson;
 import ai.elimu.model.v2.gson.content.StoryBookGson;
@@ -42,24 +44,45 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.context.WebApplicationContext;
 import ai.elimu.dao.LetterSoundCorrespondenceDao;
+import ai.elimu.dao.NumberContributionEventDao;
+import ai.elimu.dao.StoryBookLearningEventDao;
+import ai.elimu.model.analytics.StoryBookLearningEvent;
+import ai.elimu.model.contributor.LetterContributionEvent;
+import ai.elimu.model.contributor.LetterSoundCorrespondenceContributionEvent;
+import ai.elimu.model.enums.Platform;
+import ai.elimu.util.csv.CsvAnalyticsExtractionHelper;
+import ai.elimu.dao.SoundDao;
+import ai.elimu.model.contributor.NumberContributionEvent;
 
 public class DbContentImportHelper {
     
     private Logger logger = LogManager.getLogger();
     
-    private AllophoneDao allophoneDao;
-    
     private LetterDao letterDao;
+    
+    private LetterContributionEventDao letterContributionEventDao;
+    
+    private SoundDao soundDao;
     
     private LetterSoundCorrespondenceDao letterSoundCorrespondenceDao;
     
+    private LetterSoundCorrespondenceContributionEventDao letterSoundCorrespondenceContributionEventDao;
+    
     private WordDao wordDao;
     
+    private WordContributionEventDao wordContributionEventDao;
+    
     private NumberDao numberDao;
+    
+    private NumberContributionEventDao numberContributionEventDao;
     
     private EmojiDao emojiDao;
     
     private StoryBookDao storyBookDao;
+    
+    private StoryBookLearningEventDao storyBookLearningEventDao;
+    
+    private StoryBookContributionEventDao storyBookContributionEventDao;
     
     private StoryBookChapterDao storyBookChapterDao;
     
@@ -67,9 +90,7 @@ public class DbContentImportHelper {
     
     private ContributorDao contributorDao;
     
-    private WordContributionEventDao wordContributionEventDao;
-    
-    private StoryBookContributionEventDao storyBookContributionEventDao;
+    private ApplicationDao applicationDao;
     
     /**
      * Extracts educational content from the CSV files in {@code src/main/resources/db/content_TEST/<Language>/} and 
@@ -104,40 +125,60 @@ public class DbContentImportHelper {
         contributor.setEmail("dev@elimu.ai");
         contributor.setFirstName("Dev");
         contributor.setLastName("Contributor");
-        contributor.setRoles(new HashSet<>(Arrays.asList(Role.CONTRIBUTOR)));
+        contributor.setRoles(new HashSet<>(Arrays.asList(Role.CONTRIBUTOR, Role.EDITOR, Role.ANALYST, Role.ADMIN)));
         contributor.setRegistrationTime(Calendar.getInstance());
         contributorDao.create(contributor);
         
-        // Extract and import Allophones from CSV file in src/main/resources/
-        File allophonesCsvFile = new File(contentDirectory, "allophones.csv");
-        List<Allophone> allophones = CsvContentExtractionHelper.getAllophonesFromCsvBackup(allophonesCsvFile);
-        logger.info("allophones.size(): " + allophones.size());
-        allophoneDao = (AllophoneDao) webApplicationContext.getBean("allophoneDao");
-        for (Allophone allophone : allophones) {
-            allophoneDao.create(allophone);
-        }
-        
         // Extract and import Letters from CSV file in src/main/resources/
         File lettersCsvFile = new File(contentDirectory, "letters.csv");
-        List<Letter> letters = CsvContentExtractionHelper.getLettersFromCsvBackup(lettersCsvFile, allophoneDao);
+        List<Letter> letters = CsvContentExtractionHelper.getLettersFromCsvBackup(lettersCsvFile, soundDao);
         logger.info("letters.size(): " + letters.size());
         letterDao = (LetterDao) webApplicationContext.getBean("letterDao");
+        letterContributionEventDao = (LetterContributionEventDao) webApplicationContext.getBean("letterContributionEventDao");
         for (Letter letter : letters) {
             letterDao.create(letter);
+            
+            LetterContributionEvent letterContributionEvent = new LetterContributionEvent();
+            letterContributionEvent.setContributor(contributor);
+            letterContributionEvent.setLetter(letter);
+            letterContributionEvent.setRevisionNumber(1);
+            letterContributionEvent.setTime(Calendar.getInstance());
+            letterContributionEvent.setTimeSpentMs((long)(Math.random() * 10) * 60000L);
+            letterContributionEvent.setPlatform(Platform.WEBAPP);
+            letterContributionEventDao.create(letterContributionEvent);
+        }
+        
+        // Extract and import Sounds from CSV file in src/main/resources/
+        File soundsCsvFile = new File(contentDirectory, "sounds.csv");
+        List<Sound> sounds = CsvContentExtractionHelper.getSoundsFromCsvBackup(soundsCsvFile);
+        logger.info("sounds.size(): " + sounds.size());
+        soundDao = (SoundDao) webApplicationContext.getBean("soundDao");
+        for (Sound sound : sounds) {
+            soundDao.create(sound);
         }
         
         // Extract and import letter-sound correspondences in src/main/resources/
         File letterToAllophioneMappingsCsvFile = new File(contentDirectory, "letter-sound-correspondences.csv");
-        List<LetterSoundCorrespondence> letterSoundCorrespondences = CsvContentExtractionHelper.getLetterSoundCorrespondencesFromCsvBackup(letterToAllophioneMappingsCsvFile, letterDao, allophoneDao, letterSoundCorrespondenceDao);
+        List<LetterSoundCorrespondence> letterSoundCorrespondences = CsvContentExtractionHelper.getLetterSoundCorrespondencesFromCsvBackup(letterToAllophioneMappingsCsvFile, letterDao, soundDao, letterSoundCorrespondenceDao);
         logger.info("letterSoundCorrespondences.size(): " + letterSoundCorrespondences.size());
         letterSoundCorrespondenceDao = (LetterSoundCorrespondenceDao) webApplicationContext.getBean("letterSoundCorrespondenceDao");
+        letterSoundCorrespondenceContributionEventDao = (LetterSoundCorrespondenceContributionEventDao) webApplicationContext.getBean("letterSoundCorrespondenceContributionEventDao");
         for (LetterSoundCorrespondence letterSoundCorrespondence : letterSoundCorrespondences) {
             letterSoundCorrespondenceDao.create(letterSoundCorrespondence);
+            
+            LetterSoundCorrespondenceContributionEvent letterSoundCorrespondenceContributionEvent = new LetterSoundCorrespondenceContributionEvent();
+            letterSoundCorrespondenceContributionEvent.setContributor(contributor);
+            letterSoundCorrespondenceContributionEvent.setLetterSoundCorrespondence(letterSoundCorrespondence);
+            letterSoundCorrespondenceContributionEvent.setRevisionNumber(1);
+            letterSoundCorrespondenceContributionEvent.setTime(Calendar.getInstance());
+            letterSoundCorrespondenceContributionEvent.setTimeSpentMs((long)(Math.random() * 10) * 60000L);
+            letterSoundCorrespondenceContributionEvent.setPlatform(Platform.WEBAPP);
+            letterSoundCorrespondenceContributionEventDao.create(letterSoundCorrespondenceContributionEvent);
         }
         
         // Extract and import Words from CSV file in src/main/resources/
         File wordsCsvFile = new File(contentDirectory, "words.csv");
-        List<Word> words = CsvContentExtractionHelper.getWordsFromCsvBackup(wordsCsvFile, letterDao, allophoneDao, letterSoundCorrespondenceDao, wordDao);
+        List<Word> words = CsvContentExtractionHelper.getWordsFromCsvBackup(wordsCsvFile, letterDao, soundDao, letterSoundCorrespondenceDao, wordDao);
         logger.info("words.size(): " + words.size());
         wordDao = (WordDao) webApplicationContext.getBean("wordDao");
         wordContributionEventDao = (WordContributionEventDao) webApplicationContext.getBean("wordContributionEventDao");
@@ -150,6 +191,7 @@ public class DbContentImportHelper {
             wordContributionEvent.setRevisionNumber(1);
             wordContributionEvent.setTime(Calendar.getInstance());
             wordContributionEvent.setTimeSpentMs((long)(Math.random() * 10) * 60000L);
+            wordContributionEvent.setPlatform(Platform.WEBAPP);
             wordContributionEventDao.create(wordContributionEvent);
         }
         
@@ -158,11 +200,21 @@ public class DbContentImportHelper {
         List<Number> numbers = CsvContentExtractionHelper.getNumbersFromCsvBackup(numbersCsvFile, wordDao);
         logger.info("numbers.size(): " + numbers.size());
         numberDao = (NumberDao) webApplicationContext.getBean("numberDao");
+        numberContributionEventDao = (NumberContributionEventDao) webApplicationContext.getBean("numberContributionEventDao");
         for (Number number : numbers) {
             numberDao.create(number);
+            
+            NumberContributionEvent numberContributionEvent = new NumberContributionEvent();
+            numberContributionEvent.setContributor(contributor);
+            numberContributionEvent.setNumber(number);
+            numberContributionEvent.setRevisionNumber(1);
+            numberContributionEvent.setTime(Calendar.getInstance());
+            numberContributionEvent.setTimeSpentMs((long)(Math.random() * 10) * 60000L);
+            numberContributionEvent.setPlatform(Platform.WEBAPP);
+            numberContributionEventDao.create(numberContributionEvent);
         }
         
-        // Extract and import Syllables
+        // Extract and import Syllables from CSV file in src/main/resources/
         // TODO
         
         // Extract and import Emojis from CSV file in src/main/resources/
@@ -174,10 +226,10 @@ public class DbContentImportHelper {
             emojiDao.create(emoji);
         }
         
-        // Extract and import Images
+        // Extract and import Images from CSV file in src/main/resources/
         // TODO
         
-        // Extract and import Audios
+        // Extract and import Audios from CSV file in src/main/resources/
         // TODO
         
         // Extract and import StoryBooks from CSV file in src/main/resources/
@@ -236,11 +288,41 @@ public class DbContentImportHelper {
             storyBookContributionEvent.setStoryBook(storyBook);
             storyBookContributionEvent.setRevisionNumber(1);
             storyBookContributionEvent.setTime(Calendar.getInstance());
+            storyBookContributionEvent.setTimeSpentMs((long)(Math.random() * 10) * 60000L);
+            storyBookContributionEvent.setPlatform(Platform.WEBAPP);
             storyBookContributionEventDao.create(storyBookContributionEvent);
         }
         
-        // Extract and import Videos
+        // Extract and import Videos from CSV file in src/main/resources/
         // TODO
+        
+        
+        String analyticsDirectoryPath = "db" + File.separator + "analytics_" + environment + File.separator + language.toString().toLowerCase();
+        logger.info("analyticsDirectoryPath: \"" + analyticsDirectoryPath + "\"");
+        URL analyticsDirectoryURL = getClass().getClassLoader().getResource(analyticsDirectoryPath);
+        logger.info("analyticsDirectoryURL: " + analyticsDirectoryURL);
+        if (analyticsDirectoryURL == null) {
+            logger.warn("The analytics directory was not found. Aborting analytics import.");
+            return;
+        }
+        File analyticsDirectory = new File(analyticsDirectoryURL.getPath());
+        logger.info("analyticsDirectory: " + analyticsDirectory);
+        
+        // Extract and import LetterLearningEvents from CSV file in src/main/resources/
+        // TODO
+        
+        // Extract and import WordLearningEvents from CSV file in src/main/resources/
+        // TODO
+        
+        // Extract and import StoryBookLearningEvents from CSV file in src/main/resources/
+        File storyBookLearningEventsCsvFile = new File(analyticsDirectory, "storybook-learning-events.csv");
+        applicationDao = (ApplicationDao) webApplicationContext.getBean("applicationDao");
+        List<StoryBookLearningEvent> storyBookLearningEvents = CsvAnalyticsExtractionHelper.getStoryBookLearningEventsFromCsvBackup(storyBookLearningEventsCsvFile, applicationDao, storyBookDao);
+        logger.info("storyBookLearningEvents.size(): " + storyBookLearningEvents.size());
+        storyBookLearningEventDao = (StoryBookLearningEventDao) webApplicationContext.getBean("storyBookLearningEventDao");
+        for (StoryBookLearningEvent storyBookLearningEvent : storyBookLearningEvents) {
+            storyBookLearningEventDao.create(storyBookLearningEvent);
+        }
         
         logger.info("Content import complete");
     }

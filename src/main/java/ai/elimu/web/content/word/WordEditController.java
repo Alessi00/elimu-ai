@@ -5,7 +5,6 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.Logger;
-import ai.elimu.dao.AllophoneDao;
 import ai.elimu.dao.AudioContributionEventDao;
 import ai.elimu.dao.AudioDao;
 import ai.elimu.dao.EmojiDao;
@@ -15,7 +14,6 @@ import ai.elimu.dao.SyllableDao;
 import ai.elimu.dao.WordContributionEventDao;
 import ai.elimu.dao.WordDao;
 import ai.elimu.dao.WordPeerReviewEventDao;
-import ai.elimu.model.content.Allophone;
 import ai.elimu.model.content.Emoji;
 import ai.elimu.model.content.Letter;
 import ai.elimu.model.content.LetterSoundCorrespondence;
@@ -27,11 +25,11 @@ import ai.elimu.model.content.multimedia.Image;
 import ai.elimu.model.contributor.AudioContributionEvent;
 import ai.elimu.model.contributor.Contributor;
 import ai.elimu.model.contributor.WordContributionEvent;
-import ai.elimu.model.enums.Language;
+import ai.elimu.model.v2.enums.Language;
 import ai.elimu.model.enums.Platform;
-import ai.elimu.model.enums.content.AudioFormat;
-import ai.elimu.model.enums.content.SpellingConsistency;
-import ai.elimu.model.enums.content.WordType;
+import ai.elimu.model.v2.enums.content.AudioFormat;
+import ai.elimu.model.v2.enums.content.SpellingConsistency;
+import ai.elimu.model.v2.enums.content.WordType;
 import ai.elimu.util.ConfigHelper;
 import ai.elimu.util.audio.GoogleCloudTextToSpeechHelper;
 import java.util.ArrayList;
@@ -50,6 +48,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import ai.elimu.dao.LetterSoundCorrespondenceDao;
+import ai.elimu.util.DiscordHelper;
+import ai.elimu.web.context.EnvironmentContextLoaderListener;
 
 @Controller
 @RequestMapping("/content/word/edit")
@@ -59,9 +59,6 @@ public class WordEditController {
     
     @Autowired
     private WordDao wordDao;
-    
-    @Autowired
-    private AllophoneDao allophoneDao;
     
     @Autowired
     private LetterSoundCorrespondenceDao letterSoundCorrespondenceDao;
@@ -107,7 +104,6 @@ public class WordEditController {
                 
         model.addAttribute("word", word);
         model.addAttribute("timeStart", System.currentTimeMillis());
-        model.addAttribute("allophones", allophoneDao.readAllOrdered());
         model.addAttribute("letterSoundCorrespondences", letterSoundCorrespondenceDao.readAllOrderedByUsage()); // TODO: sort by letter(s) text
         model.addAttribute("rootWords", wordDao.readAllOrdered());
         model.addAttribute("emojisByWordId", getEmojisByWordId());
@@ -132,7 +128,7 @@ public class WordEditController {
                     audio.setTimeLastUpdate(Calendar.getInstance());
                     audio.setContentType(AudioFormat.MP3.getContentType());
                     audio.setWord(word);
-                    audio.setTitle("word-" + word.getId());
+                    audio.setTitle("word_" + word.getText());
                     audio.setTranscription(word.getText());
                     audio.setBytes(audioBytes);
                     audio.setDurationMs(null); // TODO: Convert from byte[] to File, and extract audio duration
@@ -190,12 +186,13 @@ public class WordEditController {
             result.rejectValue("text", "NonUnique");
         }
         
-        List<Allophone> allophones = allophoneDao.readAllOrdered();
+        if (StringUtils.containsAny(word.getText(), " ")) {
+            result.rejectValue("text", "WordSpace");
+        }
         
         if (result.hasErrors()) {
             model.addAttribute("word", word);
             model.addAttribute("timeStart", request.getParameter("timeStart"));
-            model.addAttribute("allophones", allophones);
             model.addAttribute("letterSoundCorrespondences", letterSoundCorrespondenceDao.readAllOrderedByUsage()); // TODO: sort by letter(s) text
             model.addAttribute("rootWords", wordDao.readAllOrdered());
             model.addAttribute("emojisByWordId", getEmojisByWordId());
@@ -229,9 +226,19 @@ public class WordEditController {
             wordContributionEvent.setTime(Calendar.getInstance());
             wordContributionEvent.setWord(word);
             wordContributionEvent.setRevisionNumber(word.getRevisionNumber());
-            wordContributionEvent.setComment(request.getParameter("contributionComment"));
+            wordContributionEvent.setComment(StringUtils.abbreviate(request.getParameter("contributionComment"), 1000));
             wordContributionEvent.setTimeSpentMs(System.currentTimeMillis() - Long.valueOf(request.getParameter("timeStart")));
+            wordContributionEvent.setPlatform(Platform.WEBAPP);
             wordContributionEventDao.create(wordContributionEvent);
+            
+            String contentUrl = "https://" + EnvironmentContextLoaderListener.PROPERTIES.getProperty("content.language").toLowerCase() + ".elimu.ai/content/word/edit/" + word.getId();
+            DiscordHelper.sendChannelMessage(
+                    "Word edited: " + contentUrl, 
+                    "\"" + word.getText() + "\"",
+                    "Comment: \"" + wordContributionEvent.getComment() + "\"",
+                    null,
+                    null
+            );
             
             // Note: updating the list of Words in StoryBookParagraphs is handled by the ParagraphWordScheduler
             

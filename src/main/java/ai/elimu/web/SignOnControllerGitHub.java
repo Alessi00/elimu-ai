@@ -7,7 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import ai.elimu.dao.ContributorDao;
 import ai.elimu.model.contributor.Contributor;
-import ai.elimu.model.enums.Environment;
+import ai.elimu.model.v2.enums.Environment;
 import ai.elimu.model.enums.Role;
 import ai.elimu.util.ConfigHelper;
 import ai.elimu.web.context.EnvironmentContextLoaderListener;
@@ -60,12 +60,13 @@ public class SignOnControllerGitHub {
         if (EnvironmentContextLoaderListener.env == Environment.TEST) {
             clientId = "57aad0f85f09ef18d8e6";
             clientSecret = ConfigHelper.getProperty("github.api.secret");
-            baseUrl = "http://" + request.getServerName();
+            baseUrl = "https://" + request.getServerName();
         } else if (EnvironmentContextLoaderListener.env == Environment.PROD) {
             clientId = "7018e4e57438eb0191a7";
             clientSecret = ConfigHelper.getProperty("github.api.secret");
-            baseUrl = "http://" + request.getServerName();
+            baseUrl = "https://" + request.getServerName();
         }
+        logger.info("baseUrl: " + baseUrl);
 
         oAuth20Service = new ServiceBuilder(clientId)
                 .apiSecret(clientSecret)
@@ -163,6 +164,7 @@ public class SignOnControllerGitHub {
                     return "redirect:/content/contributor/add-email";
                 }
                 contributorDao.create(contributor);
+                logger.info("Contributor " + contributor.getEmail() + " was created at " + request.getServerName());
             } else {
                 // Contributor already exists in database
                 // Update existing contributor with latest values fetched from provider

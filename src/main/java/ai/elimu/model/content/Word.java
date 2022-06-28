@@ -1,6 +1,5 @@
 package ai.elimu.model.content;
 
-import ai.elimu.model.enums.PeerReviewStatus;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -9,8 +8,8 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderColumn;
 import javax.validation.constraints.NotNull;
-import ai.elimu.model.enums.content.SpellingConsistency;
-import ai.elimu.model.enums.content.WordType;
+import ai.elimu.model.v2.enums.content.SpellingConsistency;
+import ai.elimu.model.v2.enums.content.WordType;
 import javax.persistence.ManyToOne;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -38,9 +37,6 @@ public class Word extends Content {
 //    @NotNull
     @Enumerated(EnumType.STRING)
     private SpellingConsistency spellingConsistency;
-    
-    @Enumerated(EnumType.STRING)
-    private PeerReviewStatus peerReviewStatus = PeerReviewStatus.PENDING;
 
     @Deprecated
     public String getText() {
@@ -82,13 +78,5 @@ public class Word extends Content {
 
     public void setSpellingConsistency(SpellingConsistency spellingConsistency) {
         this.spellingConsistency = spellingConsistency;
-    }
-    
-    public PeerReviewStatus getPeerReviewStatus() {
-        return peerReviewStatus;
-    }
-
-    public void setPeerReviewStatus(PeerReviewStatus peerReviewStatus) {
-        this.peerReviewStatus = peerReviewStatus;
     }
 }

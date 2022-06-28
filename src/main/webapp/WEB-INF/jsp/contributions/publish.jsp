@@ -51,10 +51,10 @@
         Contributors get rewarded with 
         <c:choose>
             <c:when test="${applicationScope.configProperties['env'] != 'PROD'}">
-                <a href="https://rinkeby.etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>ELIMU</code></a>
+                <a href="https://rinkeby.etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>$ELIMU</code></a>
             </c:when>
             <c:otherwise>
-                <a href="https://etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>ELIMU</code></a>
+                <a href="https://etherscan.io/token/0xe29797910d413281d2821d5d9a989262c8121cc2" target="_blank"><code>$ELIMU</code></a>
             </c:otherwise>
         </c:choose> 
         tokens. All token holders can participate in the community's <a href="<spring:url value='/contributions/aragon-dao' />">decision making</a>.
@@ -63,8 +63,8 @@
     <div class="divider"></div>
     
     <p>
-        If you have any questions, contact us at <a href="mailto:info@elimu.ai">info@elimu.ai</a> or via our 
-        <a href="https://join.slack.com/t/elimu-ai/shared_invite/zt-eoc921ow-0cfjATlIF2X~zHhSgSyaAw">chat room (Slack)</a>.
+        If you have any questions, contact us at <a href="mailto:info@elimu.ai">info@elimu.ai</a> or via 
+        <a href="https://discord.gg/9rz4XYJJDE">Discord</a>.
     </p>
 </content:section>
 

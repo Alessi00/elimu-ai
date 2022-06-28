@@ -2,9 +2,10 @@ package ai.elimu.rest.v2.analytics;
 
 import ai.elimu.dao.ApplicationDao;
 import ai.elimu.dao.LetterDao;
-import ai.elimu.model.enums.Language;
+import ai.elimu.model.v2.enums.Language;
 import ai.elimu.util.AnalyticsHelper;
 import ai.elimu.util.ConfigHelper;
+import ai.elimu.util.DiscordHelper;
 import java.io.File;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -54,6 +55,11 @@ public class LetterAssessmentEventsRestController {
         // Expected format: "7161a85a0e4751cd_letter-assessment-events_2020-04-23.csv"
         String originalFilename = multipartFile.getOriginalFilename();
         logger.info("originalFilename: " + originalFilename);
+        
+        // TODO: Send notification to the #📊-data-collection channel in Discord
+        // Hide parts of the Android ID, e.g. "7161***51cd_word-learning-events_2020-04-23.csv"
+        String anonymizedOriginalFilename = originalFilename.substring(0, 4) + "***" + originalFilename.substring(12);
+        DiscordHelper.sendChannelMessage("Received dataset: `" + anonymizedOriginalFilename + "`", null, null, null, null);
         
         String androidIdExtractedFromFilename = AnalyticsHelper.extractAndroidIdFromCsvFilename(originalFilename);
         logger.info("androidIdExtractedFromFilename: \"" + androidIdExtractedFromFilename + "\"");

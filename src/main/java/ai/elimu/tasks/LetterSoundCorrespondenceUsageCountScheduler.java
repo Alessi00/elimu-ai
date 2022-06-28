@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.apache.logging.log4j.Logger;
 import ai.elimu.dao.WordDao;
-import ai.elimu.model.content.Allophone;
+import ai.elimu.model.content.Sound;
 import ai.elimu.model.content.Letter;
 import ai.elimu.model.content.LetterSoundCorrespondence;
 import ai.elimu.model.content.Word;
@@ -40,13 +40,9 @@ public class LetterSoundCorrespondenceUsageCountScheduler {
         logger.info("words.size(): " + words.size());
         for (Word word : words) {
             logger.info("word.getText(): " + word.getText());
-            
             for (LetterSoundCorrespondence letterSoundCorrespondence : word.getLetterSoundCorrespondences()) {
-                if (!letterSoundCorrespondenceFrequencyMap.containsKey(letterSoundCorrespondence.getId())) {
-                    letterSoundCorrespondenceFrequencyMap.put(letterSoundCorrespondence.getId(), word.getUsageCount());
-                } else {
-                    letterSoundCorrespondenceFrequencyMap.put(letterSoundCorrespondence.getId(), letterSoundCorrespondenceFrequencyMap.get(letterSoundCorrespondence.getId()) + word.getUsageCount());
-                }
+                letterSoundCorrespondenceFrequencyMap.put(letterSoundCorrespondence.getId(),
+                        letterSoundCorrespondenceFrequencyMap.getOrDefault(letterSoundCorrespondence.getId(), 0) + word.getUsageCount());
             }
         }
 
@@ -54,7 +50,7 @@ public class LetterSoundCorrespondenceUsageCountScheduler {
         for (LetterSoundCorrespondence letterSoundCorrespondence : letterSoundCorrespondenceDao.readAll()) {
             logger.info("letterSoundCorrespondence.getId(): " + letterSoundCorrespondence.getId());
             logger.info("letterSoundCorrespondence Letters: \"" + letterSoundCorrespondence.getLetters().stream().map(Letter::getText).collect(Collectors.joining()) + "\"");
-            logger.info("letterSoundCorrespondence Allophones: /" + letterSoundCorrespondence.getAllophones().stream().map(Allophone::getValueIpa).collect(Collectors.joining()) + "/");
+            logger.info("letterSoundCorrespondence Sounds: /" + letterSoundCorrespondence.getSounds().stream().map(Sound::getValueIpa).collect(Collectors.joining()) + "/");
             logger.info("letterSoundCorrespondence.getUsageCount() (before update): " + letterSoundCorrespondence.getUsageCount());
             
             int newUsageCount = 0;

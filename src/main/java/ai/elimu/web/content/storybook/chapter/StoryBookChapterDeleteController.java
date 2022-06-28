@@ -1,6 +1,7 @@
 package ai.elimu.web.content.storybook.chapter;
 
 import ai.elimu.dao.AudioDao;
+import ai.elimu.dao.ImageContributionEventDao;
 import ai.elimu.dao.ImageDao;
 import ai.elimu.dao.StoryBookChapterDao;
 import ai.elimu.dao.StoryBookContributionEventDao;
@@ -12,10 +13,14 @@ import ai.elimu.model.content.StoryBookParagraph;
 import ai.elimu.model.content.multimedia.Audio;
 import ai.elimu.model.content.multimedia.Image;
 import ai.elimu.model.contributor.Contributor;
+import ai.elimu.model.contributor.ImageContributionEvent;
 import ai.elimu.model.contributor.StoryBookContributionEvent;
 import ai.elimu.model.enums.PeerReviewStatus;
+import ai.elimu.model.enums.Platform;
 import ai.elimu.model.enums.Role;
 import ai.elimu.rest.v2.service.StoryBooksJsonService;
+import ai.elimu.util.DiscordHelper;
+import ai.elimu.web.context.EnvironmentContextLoaderListener;
 import java.util.Calendar;
 import java.util.List;
 import javax.servlet.http.HttpSession;
@@ -50,6 +55,9 @@ public class StoryBookChapterDeleteController {
     
     @Autowired
     private ImageDao imageDao;
+    
+    @Autowired
+    private ImageContributionEventDao imageContributionEventDao;
     
     @Autowired
     private StoryBooksJsonService storyBooksJsonService;
@@ -100,6 +108,12 @@ public class StoryBookChapterDeleteController {
             chapterImage.setWords(null);
             imageDao.update(chapterImage);
             
+            // Remove contribution events
+            for (ImageContributionEvent imageContributionEvent : imageContributionEventDao.readAll(chapterImage)) {
+                logger.warn("Deleting ImageContributionEvent from the database");
+                imageContributionEventDao.delete(imageContributionEvent);
+            }
+            
             logger.warn("Deleting the chapter image from the database");
             imageDao.delete(chapterImage);
         }
@@ -118,7 +132,22 @@ public class StoryBookChapterDeleteController {
         storyBookContributionEvent.setStoryBook(storyBook);
         storyBookContributionEvent.setRevisionNumber(storyBook.getRevisionNumber());
         storyBookContributionEvent.setComment("Deleted storybook chapter " + (storyBookChapterToBeDeleted.getSortOrder() + 1) + " (🤖 auto-generated comment)");
+        storyBookContributionEvent.setTimeSpentMs(0L);
+        storyBookContributionEvent.setPlatform(Platform.WEBAPP);
         storyBookContributionEventDao.create(storyBookContributionEvent);
+        
+        String contentUrl = "https://" + EnvironmentContextLoaderListener.PROPERTIES.getProperty("content.language").toLowerCase() + ".elimu.ai/content/storybook/edit/" + storyBook.getId();
+        String embedThumbnailUrl = null;
+        if (storyBook.getCoverImage() != null) {
+            embedThumbnailUrl = "https://" + EnvironmentContextLoaderListener.PROPERTIES.getProperty("content.language").toLowerCase() + ".elimu.ai/image/" + storyBook.getCoverImage().getId() + "_r" + storyBook.getCoverImage().getRevisionNumber() + "." + storyBook.getCoverImage().getImageFormat().toString().toLowerCase();
+        }
+        DiscordHelper.sendChannelMessage(
+                "Storybook chapter deleted: " + contentUrl,
+                "\"" + storyBookContributionEvent.getStoryBook().getTitle() + "\"",
+                "Comment: \"" + storyBookContributionEvent.getComment() + "\"",
+                null,
+                embedThumbnailUrl
+        );
         
         // Update the sorting order of the remaining chapters
         List<StoryBookChapter> storyBookChapters = storyBookChapterDao.readAll(storyBook);

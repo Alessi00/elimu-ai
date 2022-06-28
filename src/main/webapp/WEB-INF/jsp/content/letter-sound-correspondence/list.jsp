@@ -18,7 +18,8 @@
         </script>
         
         <p>
-            <fmt:message key="to.add.new.content.click.the.button.below" />
+            <fmt:message key="to.add.new.content.click.the.button.below" /> You can also 
+            <a href="<spring:url value='/content/letter-sound-correspondence/peer-reviews' />">peer-review</a> letter-sound correspondences.
         </p>
     
         <c:if test="${not empty letterSoundCorrespondences}">
@@ -27,7 +28,8 @@
                     <th><fmt:message key="usage.count" /></th>
                     <th><fmt:message key="letters" /></th>
                     <th></th>
-                    <th><fmt:message key="allophones" /></th>
+                    <th><fmt:message key="sounds" /></th>
+                    <th><fmt:message key="revision" /></th>
                     <th><fmt:message key="edit" /></th>
                 </thead>
                 <tbody>
@@ -39,13 +41,34 @@
                                 ${letterSoundCorrespondence.usageCount}
                             </td>
                             <td style="font-size: 2em;">
-                                " <c:forEach var="letter" items="${letterSoundCorrespondence.letters}"><a href="<spring:url value='/content/letter/edit/${letter.id}' />">${letter.text} </a> </c:forEach> "
+                                " <c:forEach var="letter" items="${letterSoundCorrespondence.letters}"><a href="<spring:url value='/content/letter/edit/${letter.id}' />">${letter.text}</a> </c:forEach> "
                             </td>
                             <td style="font-size: 2em;">
                                 ➞
                             </td>
                             <td style="font-size: 2em;">
-                                / <c:forEach var="allophone" items="${letterSoundCorrespondence.allophones}"><a href="<spring:url value='/content/allophone/edit/${allophone.id}' />">${allophone.valueIpa}</a> </c:forEach> /
+                                / <c:forEach var="sound" items="${letterSoundCorrespondence.sounds}"><a href="<spring:url value='/content/sound/edit/${sound.id}' />">${sound.valueIpa}</a> </c:forEach> /
+                            </td>
+                            <td>
+                                <p>#${letterSoundCorrespondence.revisionNumber}</p>
+                                <p>
+                                    <c:choose>
+                                        <c:when test="${letterSoundCorrespondence.peerReviewStatus == 'APPROVED'}">
+                                            <c:set var="peerReviewStatusColor" value="teal lighten-5" />
+                                        </c:when>
+                                        <c:when test="${letterSoundCorrespondence.peerReviewStatus == 'NOT_APPROVED'}">
+                                            <c:set var="peerReviewStatusColor" value="deep-orange lighten-4" />
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="peerReviewStatusColor" value="" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <span class="chip ${peerReviewStatusColor}">
+                                        <a href="<spring:url value='/content/letter-sound-correspondence/edit/${letterSoundCorrespondence.id}#contribution-events' />">
+                                            ${letterSoundCorrespondence.peerReviewStatus}
+                                        </a>
+                                    </span>
+                                </p>
                             </td>
                             <td>
                                 <a class="editLink" href="<spring:url value='/content/letter-sound-correspondence/edit/${letterSoundCorrespondence.id}' />"><span class="material-icons">edit</span></a>

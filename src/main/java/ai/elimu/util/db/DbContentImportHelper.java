@@ -44,6 +44,7 @@ import ai.elimu.util.WordExtractionHelper;
 import ai.elimu.util.csv.CsvAnalyticsExtractionHelper;
 import ai.elimu.util.csv.CsvContentExtractionHelper;
 import ai.elimu.util.csv.CsvLetterExtractionHelper;
+import ai.elimu.util.csv.CsvLetterSoundCorrespondencesExtractionHelper;
 import ai.elimu.util.csv.CsvSoundExtractionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -162,7 +163,7 @@ public class DbContentImportHelper {
 
         // Extract and import letter-sound correspondences in src/main/resources/
         File letterToAllophioneMappingsCsvFile = new File(contentDirectory, "letter-sound-correspondences.csv");
-        List<LetterSoundCorrespondence> letterSoundCorrespondences = CsvContentExtractionHelper.getLetterSoundCorrespondencesFromCsvBackup(letterToAllophioneMappingsCsvFile, letterDao, soundDao, letterSoundCorrespondenceDao);
+        List<LetterSoundCorrespondence> letterSoundCorrespondences = CsvLetterSoundCorrespondencesExtractionHelper.getLetterSoundCorrespondencesFromCsvBackup(letterToAllophioneMappingsCsvFile, letterDao, soundDao, letterSoundCorrespondenceDao);
         logger.info("letterSoundCorrespondences.size(): " + letterSoundCorrespondences.size());
         letterSoundCorrespondenceDao = (LetterSoundCorrespondenceDao) webApplicationContext.getBean("letterSoundCorrespondenceDao");
         letterSoundCorrespondenceContributionEventDao = (LetterSoundCorrespondenceContributionEventDao) webApplicationContext.getBean("letterSoundCorrespondenceContributionEventDao");

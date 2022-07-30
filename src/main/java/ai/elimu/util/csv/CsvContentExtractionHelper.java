@@ -18,7 +18,6 @@ import ai.elimu.model.v2.gson.content.StoryBookChapterGson;
 import ai.elimu.model.v2.gson.content.StoryBookGson;
 import ai.elimu.model.v2.gson.content.StoryBookParagraphGson;
 import ai.elimu.web.content.emoji.EmojiCsvExportController;
-import ai.elimu.web.content.letter_sound_correspondence.LetterSoundCorrespondenceCsvExportController;
 import ai.elimu.web.content.number.NumberCsvExportController;
 import ai.elimu.web.content.storybook.StoryBookCsvExportController;
 import ai.elimu.web.content.word.WordCsvExportController;
@@ -45,76 +44,6 @@ import java.util.Set;
 public class CsvContentExtractionHelper {
 
     private static final Logger logger = LogManager.getLogger();
-
-    /**
-     * For information on how the CSV files were generated, see {@link LetterSoundCorrespondenceCsvExportController#handleRequest}.
-     */
-    public static List<LetterSoundCorrespondence> getLetterSoundCorrespondencesFromCsvBackup(File csvFile, LetterDao letterDao, SoundDao soundDao, LetterSoundCorrespondenceDao letterSoundCorrespondenceDao) {
-        logger.info("getLetterSoundCorrespondencesFromCsvBackup");
-
-        List<LetterSoundCorrespondence> letterSoundCorrespondences = new ArrayList<>();
-
-        Path csvFilePath = Paths.get(csvFile.toURI());
-        logger.info("csvFilePath: " + csvFilePath);
-        try {
-            Reader reader = Files.newBufferedReader(csvFilePath);
-            CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withHeader(
-                            "id",
-                            "letter_ids",
-                            "letter_texts",
-                            "sound_ids",
-                            "sound_values_ipa",
-                            "usage_count"
-                    )
-                    .withSkipHeaderRecord();
-            CSVParser csvParser = new CSVParser(reader, csvFormat);
-            for (CSVRecord csvRecord : csvParser) {
-                logger.info("csvRecord: " + csvRecord);
-
-                LetterSoundCorrespondence letterSoundCorrespondence = new LetterSoundCorrespondence();
-
-                JSONArray letterIdsJsonArray = new JSONArray(csvRecord.get("letter_ids"));
-                logger.info("letterIdsJsonArray: " + letterIdsJsonArray);
-
-                JSONArray letterTextsJsonArray = new JSONArray(csvRecord.get("letter_texts"));
-                logger.info("letterTextsJsonArray: " + letterTextsJsonArray);
-                List<Letter> letters = new ArrayList<>();
-                for (int i = 0; i < letterTextsJsonArray.length(); i++) {
-                    String letterText = letterTextsJsonArray.getString(i);
-                    logger.info("Looking up Letter with text '" + letterText + "'");
-                    Letter letter = letterDao.readByText(letterText);
-                    logger.info("letter.getId(): " + letter.getId());
-                    letters.add(letter);
-                }
-                letterSoundCorrespondence.setLetters(letters);
-
-                JSONArray soundIdsJsonArray = new JSONArray(csvRecord.get("sound_ids"));
-                logger.info("soundIdsJsonArray: " + soundIdsJsonArray);
-
-                JSONArray soundValuesIpaJsonArray = new JSONArray(csvRecord.get("sound_values_ipa"));
-                logger.info("soundValuesIpaJsonArray: " + soundValuesIpaJsonArray);
-                List<Sound> sounds = new ArrayList<>();
-                for (int i = 0; i < soundValuesIpaJsonArray.length(); i++) {
-                    String soundValueIpa = soundValuesIpaJsonArray.getString(i);
-                    logger.info("Looking up Sound with IPA value /" + soundValueIpa + "/");
-                    Sound sound = soundDao.readByValueIpa(soundValueIpa);
-                    logger.info("sound.getId(): " + sound.getId());
-                    sounds.add(sound);
-                }
-                letterSoundCorrespondence.setSounds(sounds);
-
-                Integer usageCount = Integer.valueOf(csvRecord.get("usage_count"));
-                letterSoundCorrespondence.setUsageCount(usageCount);
-
-                letterSoundCorrespondences.add(letterSoundCorrespondence);
-            }
-        } catch (IOException ex) {
-            logger.error(ex);
-        }
-
-        return letterSoundCorrespondences;
-    }
 
     /**
      * For information on how the CSV files were generated, see {@link WordCsvExportController#handleRequest}.
